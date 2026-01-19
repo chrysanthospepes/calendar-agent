@@ -1,0 +1,90 @@
+# ======================
+# Python
+# ======================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ======================
+# Packaging / build
+# ======================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ======================
+# Environment & secrets
+# ======================
+.env
+.env.*
+*.env
+
+!.env.example
+
+# Google OAuth / API secrets
+credentials.json
+token.json
+oauth_token.json
+secrets/
+
+# ======================
+# Local databases
+# ======================
+*.db
+*.sqlite
+*.sqlite3
+
+# ======================
+# Logs & traces
+# ======================
+logs/
+*.log
+
+# ======================
+# Test artifacts
+# ======================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ======================
+# Editor / OS junk
+# ======================
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Vim / swap files
+*.swp
+*.swo
+
+# ======================
+# Jupyter (if used for experiments)
+# ======================
+.ipynb_checkpoints/
+
+# ======================
+# LangChain / LLM artifacts
+# ======================
+.prompt_cache/
+.llm_cache/
+
+# ======================
+# Temporary files
+# ======================
+tmp/
+temp/
