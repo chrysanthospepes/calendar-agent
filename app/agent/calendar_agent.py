@@ -1,22 +1,17 @@
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_agent
+
 from app.tools.create_event import create_event_tool
+
+from app.config.settings import load_settings
 
 class CalendarAgent:
     def __init__(self):
-        self.tools = {
-            "create_event": create_event_tool
-        }
-
+        self._settings = load_settings()
+        self.llm = ChatOpenAI(model=self._settings.openai_model, temperature=0, api_key=self._settings.openai_api)
+        self.tools = [create_event_tool]
+        self.agent = create_agent(self.llm, self.tools)
+        
     def run(self, user_prompt: str) -> str:
-        """
-        1. Parse intent (via LLM)
-        2. Call create_event tool
-        3. Return confirmation
-        """
-        # Later: replace with real LLM call
-        event_data = {
-            "title": "Meeting",
-            "start": "2026-01-20T10:00:00",
-            "end": "2026-01-20T11:00:00"
-        }
-
-        return self.tools["create_event"](**event_data)
+        result = self.agent.invoke({"messages": [("user", user_prompt)]})
+        return result["messages"][-1].content
