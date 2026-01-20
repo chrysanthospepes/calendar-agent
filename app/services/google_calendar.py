@@ -32,6 +32,6 @@ class GoogleCalendarClient:
         }
         
         return self._service.events().insert(
-            calendarId="primary",
+            calendarId=self._settings.default_calendar_id,
             body=event
         ).execute()
