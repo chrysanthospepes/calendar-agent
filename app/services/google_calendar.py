@@ -35,3 +35,12 @@ class GoogleCalendarClient:
             calendarId=self._settings.default_calendar_id,
             body=event
         ).execute()
+
+    def list_events(self, time_min, max_results=5):
+        return self._service.events().list(
+            calendarId=self._settings.default_calendar_id,
+            timeMin=time_min,
+            maxResults=max_results,
+            singleEvents=True,
+            orderBy="startTime",
+        ).execute().get("items", [])
