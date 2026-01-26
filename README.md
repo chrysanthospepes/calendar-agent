@@ -8,14 +8,15 @@ Features
 --------
 - Create events from natural-language prompts.
 - List upcoming events.
+- List today's events.
 - Uses OAuth for Google Calendar access.
 
 Project Layout
 --------------
 - `app/main.py`: CLI entry point.
 - `app/agent/calendar_agent.py`: LLM + tool wiring.
-- `app/tools/create_event.py`: Create-event tool.
-- `app/tools/list_events.py`: List-events tool.
+- `app/tools/create_event.py`: Create event tool.
+- `app/tools/list_events.py`: List events tool.
 - `app/services/google_calendar.py`: Google Calendar API client.
 - `app/services/auth/google_oauth.py`: OAuth flow and token handling.
 
@@ -64,6 +65,7 @@ Example usage:
 ```
 > Schedule a team meeting on Jan 30 at 10am for 1 hour
 > Show my next 3 events
+> List today's events
 > exit
 ```
 
