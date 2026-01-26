@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from langchain.tools import tool
@@ -38,6 +38,36 @@ def list_next_events_tool(n: int = 5) -> str:
     if not events:
         return "No upcoming events found."
 
+    lines = []
+    for idx, event in enumerate(events, start=1):
+        start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
+        end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
+        summary = event.get("summary", "Untitled event")
+        event_id = event["id"]
+        lines.append(f"{idx}. {summary} ({start} - {end}), eventID: {event_id} ")
+        
+    return "\n".join(lines)
+
+@tool
+def list_today_events_tool() -> str:
+    """
+    Use this tool to list the events of today when a user asks
+    to see their schedule or requests for the day.
+    
+    The tool returns all the events of today starting from 00:00 to 00:00
+    of the next day, ordered by start time.
+    
+    Returns:
+        str: A list of the events of today with start and end times.
+    """
+    settings = load_settings()
+    now = datetime.now(tz=ZoneInfo(settings.timezone))
+    start_day = now.replace().replace(hour=0, minute=0, second=0, microsecond=0)
+    end_day = start_day + timedelta(days=1)
+    
+    service = GoogleCalendarClient()
+    events = service.list_from_to(time_min=start_day.isoformat(timespec="seconds"), time_max=end_day.isoformat(timespec="seconds"))
+    
     lines = []
     for idx, event in enumerate(events, start=1):
         start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
