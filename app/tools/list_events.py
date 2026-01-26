@@ -43,6 +43,7 @@ def list_next_events_tool(n: int = 5) -> str:
         start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
         end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
         summary = event.get("summary", "Untitled event")
-        lines.append(f"{idx}. {summary} ({start} - {end})")
-
+        event_id = event["id"]
+        lines.append(f"{idx}. {summary} ({start} - {end}), eventID: {event_id} ")
+        
     return "\n".join(lines)
