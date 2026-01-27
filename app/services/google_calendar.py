@@ -53,3 +53,15 @@ class GoogleCalendarClient:
             singleEvents=True,
             orderBy="startTime",
         ).execute().get("items", [])
+        
+    def delete_event(self, event_id: str):
+        return self._service.events().delete(
+            calendarId=self._settings.default_calendar_id,
+            eventId=event_id,
+        ).execute()
+        
+    def get_event(self, event_id: str):
+        return self._service.events().get(
+            calendarId=self._settings.default_calendar_id,
+            eventId=event_id
+        ).execute()
