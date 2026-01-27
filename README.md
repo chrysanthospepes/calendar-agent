@@ -7,6 +7,7 @@ and create or list Google Calendar events via the Google Calendar API.
 Features
 --------
 - Create events from natural-language prompts.
+- Delete events by event id or event title.
 - List upcoming events.
 - List today's events.
 - Uses OAuth for Google Calendar access.
@@ -16,6 +17,7 @@ Project Layout
 - `app/main.py`: CLI entry point.
 - `app/agent/calendar_agent.py`: LLM + tool wiring.
 - `app/tools/create_event.py`: Create event tool.
+- `app/tools/delete_event.py`: Delete event tool.
 - `app/tools/list_events.py`: List events tool.
 - `app/services/google_calendar.py`: Google Calendar API client.
 - `app/services/auth/google_oauth.py`: OAuth flow and token handling.
@@ -66,6 +68,8 @@ Example usage:
 > Schedule a team meeting on Jan 30 at 10am for 1 hour
 > Show my next 3 events
 > List today's events
+> Delete the event with id abc123
+> Delete my "Team Meeting" event
 > exit
 ```
 
@@ -73,3 +77,5 @@ Notes
 -----
 - The CLI exits when you type `exit`.
 - Event times are created using the configured `CALENDAR_TIMEZONE`.
+- When deleting by title, the agent lists events and deletes the first matching
+  event name it finds.
