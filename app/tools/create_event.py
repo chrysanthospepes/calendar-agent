@@ -1,6 +1,14 @@
 from langchain.tools import tool
 from app.services.google_calendar import GoogleCalendarClient
-from datetime import datetime
+from app.config.settings import load_settings
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+
+def _ensure_tz(dt: datetime, tz: ZoneInfo) -> datetime:
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+        return dt.replace(tzinfo=tz)
+    return dt.astimezone(tz)
 
 @tool
 def create_event_tool(title: str, start: datetime, end: datetime) -> str:
@@ -42,3 +50,61 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> str:
     )
     print(f"Event created: {event['summary']} ({start} → {end})")
     return f"Event created: {event['summary']} ({start} → {end})"
+
+@tool
+def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0) -> str:
+    """
+    Use this tool to check for existing calendar events that conflict with a
+    proposed time window before creating or rescheduling an event.
+
+    The tool expands the requested window by `buffer_minutes` on both sides
+    to capture near-miss conflicts, then lists any events found in that range.
+    If no events are found, it returns a safe-to-proceed message.
+
+    Do NOT use this tool if:
+    - The user is explicitly asking to create, edit, or delete an event
+    - The user has not provided a concrete start and end datetime
+
+    Args:
+        start (datetime): The proposed start datetime to check.
+        end (datetime): The proposed end datetime to check.
+        buffer_minutes (int, optional): Minutes to pad before and after the
+            window when searching for conflicts. Defaults to 0.
+        
+    Returns:
+        str: A message indicating no conflicts, or a numbered list of
+        conflicting events with their start and end times.
+
+    Example usage:
+        User: "Am I free on Jan 20, 2026 from 2pm to 3pm?"
+        Tool call:
+            check_conflicts_tool(
+                start=datetime(2026, 1, 20, 14, 0),
+                end=datetime(2026, 1, 20, 15, 0),
+                buffer_minutes=15
+            )
+    """
+    settings = load_settings()
+    tz = ZoneInfo(settings.timezone)
+    start_tz = _ensure_tz(start, tz)
+    end_tz = _ensure_tz(end, tz)
+
+    time_min = start_tz - timedelta(minutes=buffer_minutes)
+    time_end = end_tz + timedelta(minutes=buffer_minutes)
+    
+    service = GoogleCalendarClient()
+    events = service.list_from_to(time_min=time_min.isoformat(timespec="seconds"),
+                                  time_max=time_end.isoformat(timespec="seconds")
+                                  )
+    
+    if not events:
+        return "There are no conflicts, it is safe to proceed."
+    
+    lines = []
+    for idx, event in enumerate(events, start=1):
+        start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
+        end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
+        summary = event.get("summary", "Untitled event")
+        lines.append(f"{idx}. {summary} ({start} - {end})")
+    
+    return "There are conflicts with:\n" + "\n".join(lines)
