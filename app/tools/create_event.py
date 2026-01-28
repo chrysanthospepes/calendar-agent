@@ -52,7 +52,7 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> str:
     return f"Event created: {event['summary']} ({start} → {end})"
 
 @tool
-def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0) -> str:
+def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0) -> dict:
     """
     Use this tool to check for existing calendar events that conflict with a
     proposed time window before creating or rescheduling an event.
@@ -72,8 +72,7 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
             window when searching for conflicts. Defaults to 0.
         
     Returns:
-        str: A message indicating no conflicts, or a numbered list of
-        conflicting events with their start and end times.
+        dict: A structured response with conflict_count and conflicts[].
 
     Example usage:
         User: "Am I free on Jan 20, 2026 from 2pm to 3pm?"
@@ -98,13 +97,23 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
                                   )
     
     if not events:
-        return "There are no conflicts, it is safe to proceed."
+        return {
+            "conflict_count": 0,
+            "conflicts": []
+        }
     
-    lines = []
-    for idx, event in enumerate(events, start=1):
+    conflicts = []
+    for event in events:
         start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
         end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
         summary = event.get("summary", "Untitled event")
-        lines.append(f"{idx}. {summary} ({start} - {end})")
-    
-    return "There are conflicts with:\n" + "\n".join(lines)
+        conflicts.append({
+            "summary": summary,
+            "start": start,
+            "end": end
+        })
+
+    return {
+        "conflict_count": len(conflicts),
+        "conflicts": conflicts
+    }
