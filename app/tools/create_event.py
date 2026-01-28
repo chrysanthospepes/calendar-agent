@@ -11,7 +11,7 @@ def _ensure_tz(dt: datetime, tz: ZoneInfo) -> datetime:
     return dt.astimezone(tz)
 
 @tool
-def create_event_tool(title: str, start: datetime, end: datetime) -> str:
+def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
     """
     Use this tool to create a calendar event when a user asks to schedule,
     book, add, or create an event or meeting at a specific date and time.
@@ -48,8 +48,12 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> str:
         start_time=start.isoformat(timespec="seconds"),
         end_time=end.isoformat(timespec="seconds")
     )
-    print(f"Event created: {event['summary']} ({start} → {end})")
-    return f"Event created: {event['summary']} ({start} → {end})"
+
+    return {
+        "summary": event['summary'],
+        "start": start,
+        "end": end
+    }
 
 @tool
 def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0) -> dict:

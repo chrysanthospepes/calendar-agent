@@ -8,7 +8,7 @@ from app.services.google_calendar import GoogleCalendarClient
 
 
 @tool
-def list_next_events_tool(n: int = 5) -> str:
+def list_next_events_tool(n: int = 5) -> dict:
     """
     Use this tool to list the next upcoming calendar events when a user asks
     to see their schedule or requests the next N events.
@@ -36,20 +36,29 @@ def list_next_events_tool(n: int = 5) -> str:
     events = service.list_events(time_min=now, max_results=n)
 
     if not events:
-        return "No upcoming events found."
-
-    lines = []
-    for idx, event in enumerate(events, start=1):
+        return {
+            "events": []
+        }
+        
+    events_list = []
+    for event in events:
         start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
         end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
         summary = event.get("summary", "Untitled event")
         event_id = event["id"]
-        lines.append(f"{idx}. {summary} ({start} - {end}), eventID: {event_id} ")
+        events_list.append({
+            "summary": summary,
+            "start": start,
+            "end": end,
+            "eventId": event_id
+        })
         
-    return "\n".join(lines)
+    return {
+        "events": events_list
+    }
 
 @tool
-def list_today_events_tool() -> str:
+def list_today_events_tool() -> dict:
     """
     Use this tool to list the events of today when a user asks
     to see their schedule or requests for the day.
@@ -68,12 +77,24 @@ def list_today_events_tool() -> str:
     service = GoogleCalendarClient()
     events = service.list_from_to(time_min=start_day.isoformat(timespec="seconds"), time_max=end_day.isoformat(timespec="seconds"))
     
-    lines = []
-    for idx, event in enumerate(events, start=1):
+    if not events:
+        return {
+            "events": []
+        }
+        
+    events_list = []
+    for event in events:
         start = event.get("start", {}).get("dateTime") or event.get("start", {}).get("date")
         end = event.get("end", {}).get("dateTime") or event.get("end", {}).get("date")
         summary = event.get("summary", "Untitled event")
         event_id = event["id"]
-        lines.append(f"{idx}. {summary} ({start} - {end}), eventID: {event_id} ")
+        events_list.append({
+            "summary": summary,
+            "start": start,
+            "end": end,
+            "eventId": event_id
+        })
         
-    return "\n".join(lines)
+    return {
+        "events": events_list
+    }

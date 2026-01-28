@@ -3,7 +3,7 @@ from langchain.tools import tool
 from app.services.google_calendar import GoogleCalendarClient
 
 @tool
-def delete_event_tool(event_id: str):
+def delete_event_tool(event_id: str) -> dict:
     """
     Use this tool to delete a calendar event when a user explicitly asks to
     cancel, remove, or delete a specific event.
@@ -35,4 +35,7 @@ def delete_event_tool(event_id: str):
     
     service.delete_event(event_id=event_id)
     
-    return f"Event {summary} was deleted."
+    return {
+        "summary": summary,
+        "eventId": event_id
+    }
