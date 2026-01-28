@@ -24,7 +24,13 @@ def list_next_events_tool(n: int = 5) -> dict:
         n (int): Number of upcoming events to list.
 
     Returns:
-        str: A list of upcoming events with start and end times.
+        dict: A structured response with events[] containing summary, start,
+            end, and eventId fields.
+
+    Example usage:
+        User: "What are my next 3 events?"
+        Tool call:
+            list_next_events_tool(n=3)
     """
     if n <= 0:
         return "Please request a positive number of events."
@@ -67,7 +73,13 @@ def list_today_events_tool() -> dict:
     of the next day, ordered by start time.
     
     Returns:
-        str: A list of the events of today with start and end times.
+        dict: A structured response with events[] containing summary, start,
+            end, and eventId fields.
+
+    Example usage:
+        User: "Show me today's events"
+        Tool call:
+            list_today_events_tool()
     """
     settings = load_settings()
     now = datetime.now(tz=ZoneInfo(settings.timezone))

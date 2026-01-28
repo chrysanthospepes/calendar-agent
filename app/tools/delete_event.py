@@ -21,7 +21,8 @@ def delete_event_tool(event_id: str) -> dict:
         event_id (str): The unique Google Calendar event id to delete.
 
     Returns:
-        str: A confirmation message that includes the deleted event summary and id.
+        dict: A structured response with the summary and event id of
+        the deleted event.
 
     Example usage:
         User: "Delete the event with id abc123"

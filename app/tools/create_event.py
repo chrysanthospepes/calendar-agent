@@ -31,7 +31,8 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
         end (datetime): The exact end datetime of the event.
 
     Returns:
-        str: A confirmation message describing the newly created calendar event.
+        dict: A structured response with summary, start date and end date of the
+        newly created event.
         
     Example usage:
         User: "Schedule a team meeting tomorrow from 10am to 11am"
