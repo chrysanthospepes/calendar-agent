@@ -1,6 +1,6 @@
 from langchain.tools import tool
 
-from app.services.google_calendar import GoogleCalendarClient
+from app.services.google_calendar import GoogleCalendarClient, GoogleCalendarError
 
 @tool
 def delete_event_tool(event_id: str) -> dict:
@@ -30,13 +30,20 @@ def delete_event_tool(event_id: str) -> dict:
             delete_event_tool(event_id="abc123")
     """
     service = GoogleCalendarClient()
-    
-    event = service.get_event(event_id=event_id)
-    summary = event.get("summary", "Untitled Event")
-    
-    service.delete_event(event_id=event_id)
-    
+
+    try:
+        event = service.get_event(event_id=event_id)
+        summary = event.get("summary", "Untitled Event")
+
+        service.delete_event(event_id=event_id)
+    except GoogleCalendarError as exc:
+        return {
+            "error": exc.message,
+            "status": exc.status,
+            "reason": exc.reason,
+        }
+
     return {
         "summary": summary,
-        "eventId": event_id
+        "eventId": event_id,
     }

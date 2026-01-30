@@ -1,5 +1,5 @@
 from langchain.tools import tool
-from app.services.google_calendar import GoogleCalendarClient
+from app.services.google_calendar import GoogleCalendarClient, GoogleCalendarError
 from app.config.settings import load_settings
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -44,11 +44,18 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
             )
     """
     service = GoogleCalendarClient()
-    event = service.create_event(
-        summary=title,
-        start_time=start.isoformat(timespec="seconds"),
-        end_time=end.isoformat(timespec="seconds")
-    )
+    try:
+        event = service.create_event(
+            summary=title,
+            start_time=start.isoformat(timespec="seconds"),
+            end_time=end.isoformat(timespec="seconds"),
+        )
+    except GoogleCalendarError as exc:
+        return {
+            "error": exc.message,
+            "status": exc.status,
+            "reason": exc.reason,
+        }
 
     return {
         "summary": event['summary'],
@@ -97,9 +104,17 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
     time_end = end_tz + timedelta(minutes=buffer_minutes)
     
     service = GoogleCalendarClient()
-    events = service.list_from_to(time_min=time_min.isoformat(timespec="seconds"),
-                                  time_max=time_end.isoformat(timespec="seconds")
-                                  )
+    try:
+        events = service.list_from_to(
+            time_min=time_min.isoformat(timespec="seconds"),
+            time_max=time_end.isoformat(timespec="seconds"),
+        )
+    except GoogleCalendarError as exc:
+        return {
+            "error": exc.message,
+            "status": exc.status,
+            "reason": exc.reason,
+        }
     
     if not events:
         return {

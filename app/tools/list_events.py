@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from langchain.tools import tool
 
 from app.config.settings import load_settings
-from app.services.google_calendar import GoogleCalendarClient
+from app.services.google_calendar import GoogleCalendarClient, GoogleCalendarError
 
 
 @tool
@@ -39,7 +39,14 @@ def list_next_events_tool(n: int = 5) -> dict:
     now = datetime.now(tz=ZoneInfo(settings.timezone)).isoformat(timespec="seconds")
 
     service = GoogleCalendarClient()
-    events = service.list_events(time_min=now, max_results=n)
+    try:
+        events = service.list_events(time_min=now, max_results=n)
+    except GoogleCalendarError as exc:
+        return {
+            "error": exc.message,
+            "status": exc.status,
+            "reason": exc.reason,
+        }
 
     if not events:
         return {
@@ -87,7 +94,17 @@ def list_today_events_tool() -> dict:
     end_day = start_day + timedelta(days=1)
     
     service = GoogleCalendarClient()
-    events = service.list_from_to(time_min=start_day.isoformat(timespec="seconds"), time_max=end_day.isoformat(timespec="seconds"))
+    try:
+        events = service.list_from_to(
+            time_min=start_day.isoformat(timespec="seconds"),
+            time_max=end_day.isoformat(timespec="seconds"),
+        )
+    except GoogleCalendarError as exc:
+        return {
+            "error": exc.message,
+            "status": exc.status,
+            "reason": exc.reason,
+        }
     
     if not events:
         return {
