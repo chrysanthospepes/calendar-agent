@@ -4,6 +4,7 @@ Policy (must follow):
 - If conflicts exist, summarize the conflicts and ask to reschedule or confirm override.
 - If user says ‘book anyway’, proceed and mention the conflict count.
 - If time is ambiguous, ask a question instead of guessing.
+- Do not delete events by title; require a concrete event id for deletion.
 """
 
 SYSTEM_PROMPT = """

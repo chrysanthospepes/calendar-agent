@@ -9,8 +9,7 @@ def delete_event_tool(event_id: str) -> dict:
     cancel, remove, or delete a specific event.
 
     The tool requires a concrete event id. If the user provides an event title,
-    time range, or other details instead of an id, first use a listing tool to
-    identify the event id, then call this tool.
+    time range, or other details instead of an id, ask for the event id.
 
     Do NOT use this tool if:
     - The user is only asking to view events or availability

@@ -7,7 +7,7 @@ and create or list Google Calendar events via the Google Calendar API.
 Features
 --------
 - Create events from natural-language prompts.
-- Delete events by event id or event title.
+- Delete events by event id.
 - List upcoming events.
 - List today's events.
 - Check for scheduling conflicts in a proposed time window.
@@ -71,7 +71,6 @@ Example usage:
 > List today's events
 > Am I free on Feb 2 from 2pm to 3pm?
 > Delete the event with id abc123
-> Delete my "Team Meeting" event
 > exit
 ```
 
@@ -79,5 +78,4 @@ Notes
 -----
 - The CLI exits when you type `exit`.
 - Event times are created using the configured `CALENDAR_TIMEZONE`.
-- When deleting by title, the agent lists events and deletes the first matching
-  event name it finds.
+- Deleting by title is not supported; provide the event id.
