@@ -4,7 +4,11 @@ def main():
     agent = CalendarAgent()
     
     while True:
-        prompt = input("> ")
+        try:
+            prompt = input("> ")
+        except (EOFError, KeyboardInterrupt):
+            print("Exiting...")
+            break
         
         if prompt == "exit":
             break
