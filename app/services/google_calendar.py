@@ -6,6 +6,8 @@ from app.services.auth.google_oauth import load_google_credentials
 from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import random
+import time
 
 
 class GoogleCalendarError(RuntimeError):
@@ -16,6 +18,9 @@ class GoogleCalendarError(RuntimeError):
         self.reason = reason
 
 class GoogleCalendarClient:
+    _MAX_RETRIES = 3
+    _BASE_BACKOFF_SECONDS = 0.5
+
     def __init__(self):
         self._settings = load_settings()
         self._service = self._build_service()
@@ -104,17 +109,23 @@ class GoogleCalendarClient:
         return status, reason
 
     def _execute(self, operation: str, request):
-        try:
-            return request.execute()
-        except HttpError as exc:
-            status, reason = self._http_error_details(exc)
-            raise GoogleCalendarError(
-                f"Google Calendar API error during {operation}.",
-                status=status,
-                reason=reason,
-            ) from exc
-        except RefreshError as exc:
-            raise GoogleCalendarError(
-                "Google Calendar credentials expired or invalid.",
-                reason=str(exc),
-            ) from exc
+        for attempt in range(self._MAX_RETRIES + 1):
+            try:
+                return request.execute()
+            except HttpError as exc:
+                status, reason = self._http_error_details(exc)
+                if status in {429, 500, 502, 503, 504} and attempt < self._MAX_RETRIES:
+                    # Exponential backoff with jitter for transient failures.
+                    backoff = self._BASE_BACKOFF_SECONDS * (2 ** attempt)
+                    time.sleep(backoff + random.uniform(0, backoff))
+                    continue
+                raise GoogleCalendarError(
+                    f"Google Calendar API error during {operation}.",
+                    status=status,
+                    reason=reason,
+                ) from exc
+            except RefreshError as exc:
+                raise GoogleCalendarError(
+                    "Google Calendar credentials expired or invalid.",
+                    reason=str(exc),
+                ) from exc
