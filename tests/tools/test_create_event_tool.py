@@ -26,7 +26,11 @@ def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
     assert calls["end"] == "2026-01-30T11:00:00"
     
     assert result == {
-        "summary": "Test",
-        "start": start,
-        "end": end
+        "ok": True,
+        "data": {
+            "summary": "Test",
+            "start": start,
+            "end": end,
+        },
+        "error": None,
     }

@@ -20,4 +20,8 @@ def test_delete_event_tool_fetches_summary_and_deletes(monkeypatch):
     assert calls["event_id"] == "event_1"
     assert calls["deleted"] is True
     assert calls["deleted_id"] == "event_1"
-    assert result == {"summary": "Test Meet", "eventId": "event_1"}
+    assert result == {
+        "ok": True,
+        "data": {"summary": "Test Meet", "eventId": "event_1"},
+        "error": None,
+    }

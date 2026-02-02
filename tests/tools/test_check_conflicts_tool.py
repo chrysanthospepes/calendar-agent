@@ -32,12 +32,16 @@ def test_check_conflicts_tool_expands_window_and_returns_conflicts(monkeypatch):
     assert calls["time_min"] == "2026-01-30T09:45:00+00:00"
     assert calls["time_max"] == "2026-01-30T11:15:00+00:00"
     assert result == {
-        "conflict_count": 1,
-        "conflicts": [
-            {
-                "summary": "Existing Meeting",
-                "start": "2026-01-30T10:15:00+00:00",
-                "end": "2026-01-30T10:45:00+00:00",
-            }
-        ],
+        "ok": True,
+        "data": {
+            "conflict_count": 1,
+            "conflicts": [
+                {
+                    "summary": "Existing Meeting",
+                    "start": "2026-01-30T10:15:00+00:00",
+                    "end": "2026-01-30T10:45:00+00:00",
+                }
+            ],
+        },
+        "error": None,
     }

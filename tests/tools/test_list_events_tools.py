@@ -37,14 +37,18 @@ def test_list_next_events_tool_calls_service_and_formats_events(monkeypatch):
     assert calls["time_min"] == "2026-01-30T09:00:00+00:00"
     assert calls["max_results"] == 1
     assert result == {
-        "events": [
-            {
-                "summary": "Standup",
-                "start": "2026-01-30T10:00:00+00:00",
-                "end": "2026-01-30T10:15:00+00:00",
-                "eventId": "evt_1",
-            }
-        ]
+        "ok": True,
+        "data": {
+            "events": [
+                {
+                    "summary": "Standup",
+                    "start": "2026-01-30T10:00:00+00:00",
+                    "end": "2026-01-30T10:15:00+00:00",
+                    "eventId": "evt_1",
+                }
+            ]
+        },
+        "error": None,
     }
 
 
@@ -68,4 +72,4 @@ def test_list_today_events_tool_calls_service_for_day_window(monkeypatch):
 
     assert calls["time_min"] == "2026-01-30T00:00:00+00:00"
     assert calls["time_max"] == "2026-01-31T00:00:00+00:00"
-    assert result == {"events": []}
+    assert result == {"ok": True, "data": {"events": []}, "error": None}
