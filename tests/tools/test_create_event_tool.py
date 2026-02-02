@@ -3,6 +3,9 @@ from app.tools.create_event import create_event_tool
 
 def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
     calls = {}
+
+    class MockSettings:
+        timezone = "UTC"
     
     class MockService:
         def create_event(self, summary, start_time, end_time):
@@ -15,6 +18,7 @@ def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
         "app.tools.create_event.GoogleCalendarClient",
         lambda: MockService()
     )
+    monkeypatch.setattr("app.tools.create_event.load_settings", lambda: MockSettings())
     
     start = datetime(2026, 1, 30, 10, 0, 0)
     end = datetime(2026, 1, 30, 11, 0 ,0)
@@ -22,8 +26,8 @@ def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
     result = create_event_tool.func(title="Test", start=start, end=end)
     
     assert calls["summary"] == "Test"
-    assert calls["start"] == "2026-01-30T10:00:00"
-    assert calls["end"] == "2026-01-30T11:00:00"
+    assert calls["start"] == "2026-01-30T10:00:00+00:00"
+    assert calls["end"] == "2026-01-30T11:00:00+00:00"
     
     assert result == {
         "ok": True,
@@ -39,6 +43,9 @@ def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
 def test_create_event_tool_returns_error_shape(monkeypatch):
     from app.services.google_calendar import GoogleCalendarError
 
+    class MockSettings:
+        timezone = "UTC"
+
     class MockService:
         def create_event(self, summary, start_time, end_time):
             raise GoogleCalendarError(
@@ -51,6 +58,7 @@ def test_create_event_tool_returns_error_shape(monkeypatch):
         "app.tools.create_event.GoogleCalendarClient",
         lambda: MockService(),
     )
+    monkeypatch.setattr("app.tools.create_event.load_settings", lambda: MockSettings())
 
     start = datetime(2026, 1, 30, 10, 0, 0)
     end = datetime(2026, 1, 30, 11, 0, 0)

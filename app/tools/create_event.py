@@ -43,12 +43,17 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
                 end=datetime(2026, 1, 20, 11, 0)
             )
     """
+    settings = load_settings()
+    tz = ZoneInfo(settings.timezone)
+    start_tz = _ensure_tz(start, tz)
+    end_tz = _ensure_tz(end, tz)
+
     service = GoogleCalendarClient()
     try:
         event = service.create_event(
             summary=title,
-            start_time=start.isoformat(timespec="seconds"),
-            end_time=end.isoformat(timespec="seconds"),
+            start_time=start_tz.isoformat(timespec="seconds"),
+            end_time=end_tz.isoformat(timespec="seconds"),
         )
     except GoogleCalendarError as exc:
         return err(
