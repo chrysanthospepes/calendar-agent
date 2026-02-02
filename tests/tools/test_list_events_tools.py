@@ -110,3 +110,54 @@ def test_list_today_events_tool_returns_error_shape(monkeypatch):
     assert result["error"]["status"] == 502
     assert result["error"]["reason"] == "Bad gateway"
     assert result["error"]["code"] == "google_calendar_error"
+
+
+def test_list_next_events_tool_returns_error_shape(monkeypatch):
+    from app.services.google_calendar import GoogleCalendarError
+
+    class MockSettings:
+        timezone = "UTC"
+
+    class MockService:
+        def list_events(self, time_min, max_results=5):
+            raise GoogleCalendarError(
+                "Oops",
+                status=503,
+                reason="Service unavailable",
+            )
+
+    monkeypatch.setattr("app.tools.list_events.load_settings", lambda: MockSettings())
+    monkeypatch.setattr("app.tools.list_events.GoogleCalendarClient", lambda: MockService())
+    monkeypatch.setattr("app.tools.list_events.datetime", FixedDateTime)
+
+    result = list_next_events_tool.func(n=2)
+
+    assert result["ok"] is False
+    assert result["data"] is None
+    assert result["error"]["message"] == "Oops"
+    assert result["error"]["status"] == 503
+    assert result["error"]["reason"] == "Service unavailable"
+    assert result["error"]["code"] == "google_calendar_error"
+
+
+def test_list_today_events_tool_respects_timezone(monkeypatch):
+    calls = {}
+
+    class MockSettings:
+        timezone = "America/Los_Angeles"
+
+    class MockService:
+        def list_from_to(self, time_min, time_max):
+            calls["time_min"] = time_min
+            calls["time_max"] = time_max
+            return []
+
+    monkeypatch.setattr("app.tools.list_events.load_settings", lambda: MockSettings())
+    monkeypatch.setattr("app.tools.list_events.GoogleCalendarClient", lambda: MockService())
+    monkeypatch.setattr("app.tools.list_events.datetime", FixedDateTime)
+
+    result = list_today_events_tool.func()
+
+    assert calls["time_min"] == "2026-01-30T00:00:00-08:00"
+    assert calls["time_max"] == "2026-01-31T00:00:00-08:00"
+    assert result == {"ok": True, "data": {"events": []}, "error": None}

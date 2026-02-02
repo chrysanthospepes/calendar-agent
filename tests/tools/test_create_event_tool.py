@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from app.tools.create_event import create_event_tool
 
 def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
@@ -71,3 +72,57 @@ def test_create_event_tool_returns_error_shape(monkeypatch):
     assert result["error"]["status"] == 503
     assert result["error"]["reason"] == "Service unavailable"
     assert result["error"]["code"] == "google_calendar_error"
+
+
+def test_create_event_tool_localizes_naive_datetimes(monkeypatch):
+    calls = {}
+
+    class MockSettings:
+        timezone = "America/Los_Angeles"
+
+    class MockService:
+        def create_event(self, summary, start_time, end_time):
+            calls["start"] = start_time
+            calls["end"] = end_time
+            return {"summary": summary}
+
+    monkeypatch.setattr(
+        "app.tools.create_event.GoogleCalendarClient",
+        lambda: MockService(),
+    )
+    monkeypatch.setattr("app.tools.create_event.load_settings", lambda: MockSettings())
+
+    start = datetime(2026, 1, 30, 10, 0, 0)
+    end = datetime(2026, 1, 30, 11, 0, 0)
+
+    create_event_tool.func(title="Localize", start=start, end=end)
+
+    assert calls["start"] == "2026-01-30T10:00:00-08:00"
+    assert calls["end"] == "2026-01-30T11:00:00-08:00"
+
+
+def test_create_event_tool_converts_aware_datetimes_to_settings_timezone(monkeypatch):
+    calls = {}
+
+    class MockSettings:
+        timezone = "America/Los_Angeles"
+
+    class MockService:
+        def create_event(self, summary, start_time, end_time):
+            calls["start"] = start_time
+            calls["end"] = end_time
+            return {"summary": summary}
+
+    monkeypatch.setattr(
+        "app.tools.create_event.GoogleCalendarClient",
+        lambda: MockService(),
+    )
+    monkeypatch.setattr("app.tools.create_event.load_settings", lambda: MockSettings())
+
+    start = datetime(2026, 1, 30, 10, 0, 0, tzinfo=ZoneInfo("UTC"))
+    end = datetime(2026, 1, 30, 11, 0, 0, tzinfo=ZoneInfo("UTC"))
+
+    create_event_tool.func(title="Convert", start=start, end=end)
+
+    assert calls["start"] == "2026-01-30T02:00:00-08:00"
+    assert calls["end"] == "2026-01-30T03:00:00-08:00"
