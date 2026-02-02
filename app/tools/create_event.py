@@ -1,5 +1,6 @@
 from langchain.tools import tool
 from app.services.google_calendar import GoogleCalendarClient, GoogleCalendarError
+from app.tools.response import ok, err
 from app.config.settings import load_settings
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -31,8 +32,7 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
         end (datetime): The exact end datetime of the event.
 
     Returns:
-        dict: A structured response with summary, start date and end date of the
-        newly created event.
+        dict: A structured response with {"ok": bool, "data": {...}, "error": {...}}.
         
     Example usage:
         User: "Schedule a team meeting tomorrow from 10am to 11am"
@@ -51,17 +51,20 @@ def create_event_tool(title: str, start: datetime, end: datetime) -> dict:
             end_time=end.isoformat(timespec="seconds"),
         )
     except GoogleCalendarError as exc:
-        return {
-            "error": exc.message,
-            "status": exc.status,
-            "reason": exc.reason,
-        }
+        return err(
+            exc.message,
+            status=exc.status,
+            reason=exc.reason,
+            code="google_calendar_error",
+        )
 
-    return {
-        "summary": event['summary'],
-        "start": start,
-        "end": end
-    }
+    return ok(
+        {
+            "summary": event["summary"],
+            "start": start,
+            "end": end,
+        }
+    )
 
 @tool
 def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0) -> dict:
@@ -84,7 +87,7 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
             window when searching for conflicts. Defaults to 0.
         
     Returns:
-        dict: A structured response with conflict_count and conflicts[].
+        dict: A structured response with {"ok": bool, "data": {...}, "error": {...}}.
 
     Example usage:
         User: "Am I free on Jan 20, 2026 from 2pm to 3pm?"
@@ -110,17 +113,20 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
             time_max=time_end.isoformat(timespec="seconds"),
         )
     except GoogleCalendarError as exc:
-        return {
-            "error": exc.message,
-            "status": exc.status,
-            "reason": exc.reason,
-        }
+        return err(
+            exc.message,
+            status=exc.status,
+            reason=exc.reason,
+            code="google_calendar_error",
+        )
     
     if not events:
-        return {
-            "conflict_count": 0,
-            "conflicts": []
-        }
+        return ok(
+            {
+                "conflict_count": 0,
+                "conflicts": [],
+            }
+        )
     
     conflicts = []
     for event in events:
@@ -133,7 +139,9 @@ def check_conflicts_tool(start: datetime, end: datetime, buffer_minutes: int = 0
             "end": end
         })
 
-    return {
-        "conflict_count": len(conflicts),
-        "conflicts": conflicts
-    }
+    return ok(
+        {
+            "conflict_count": len(conflicts),
+            "conflicts": conflicts,
+        }
+    )

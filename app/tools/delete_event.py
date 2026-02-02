@@ -1,6 +1,7 @@
 from langchain.tools import tool
 
 from app.services.google_calendar import GoogleCalendarClient, GoogleCalendarError
+from app.tools.response import ok, err
 
 @tool
 def delete_event_tool(event_id: str) -> dict:
@@ -20,8 +21,7 @@ def delete_event_tool(event_id: str) -> dict:
         event_id (str): The unique Google Calendar event id to delete.
 
     Returns:
-        dict: A structured response with the summary and event id of
-        the deleted event.
+        dict: A structured response with {"ok": bool, "data": {...}, "error": {...}}.
 
     Example usage:
         User: "Delete the event with id abc123"
@@ -36,13 +36,16 @@ def delete_event_tool(event_id: str) -> dict:
 
         service.delete_event(event_id=event_id)
     except GoogleCalendarError as exc:
-        return {
-            "error": exc.message,
-            "status": exc.status,
-            "reason": exc.reason,
-        }
+        return err(
+            exc.message,
+            status=exc.status,
+            reason=exc.reason,
+            code="google_calendar_error",
+        )
 
-    return {
-        "summary": summary,
-        "eventId": event_id,
-    }
+    return ok(
+        {
+            "summary": summary,
+            "eventId": event_id,
+        }
+    )
