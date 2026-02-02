@@ -34,3 +34,32 @@ def test_create_event_tool_calls_service_and_returns_data(monkeypatch):
         },
         "error": None,
     }
+
+
+def test_create_event_tool_returns_error_shape(monkeypatch):
+    from app.services.google_calendar import GoogleCalendarError
+
+    class MockService:
+        def create_event(self, summary, start_time, end_time):
+            raise GoogleCalendarError(
+                "Boom",
+                status=503,
+                reason="Service unavailable",
+            )
+
+    monkeypatch.setattr(
+        "app.tools.create_event.GoogleCalendarClient",
+        lambda: MockService(),
+    )
+
+    start = datetime(2026, 1, 30, 10, 0, 0)
+    end = datetime(2026, 1, 30, 11, 0, 0)
+
+    result = create_event_tool.func(title="Test", start=start, end=end)
+
+    assert result["ok"] is False
+    assert result["data"] is None
+    assert result["error"]["message"] == "Boom"
+    assert result["error"]["status"] == 503
+    assert result["error"]["reason"] == "Service unavailable"
+    assert result["error"]["code"] == "google_calendar_error"

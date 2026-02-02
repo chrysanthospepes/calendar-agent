@@ -45,3 +45,33 @@ def test_check_conflicts_tool_expands_window_and_returns_conflicts(monkeypatch):
         },
         "error": None,
     }
+
+
+def test_check_conflicts_tool_returns_error_shape(monkeypatch):
+    from app.services.google_calendar import GoogleCalendarError
+
+    class MockSettings:
+        timezone = "UTC"
+
+    class MockService:
+        def list_from_to(self, time_min, time_max):
+            raise GoogleCalendarError(
+                "Down",
+                status=500,
+                reason="Internal error",
+            )
+
+    monkeypatch.setattr("app.tools.create_event.load_settings", lambda: MockSettings())
+    monkeypatch.setattr("app.tools.create_event.GoogleCalendarClient", lambda: MockService())
+
+    start = datetime(2026, 1, 30, 10, 0, 0)
+    end = datetime(2026, 1, 30, 11, 0, 0)
+
+    result = check_conflicts_tool.func(start=start, end=end, buffer_minutes=0)
+
+    assert result["ok"] is False
+    assert result["data"] is None
+    assert result["error"]["message"] == "Down"
+    assert result["error"]["status"] == 500
+    assert result["error"]["reason"] == "Internal error"
+    assert result["error"]["code"] == "google_calendar_error"
